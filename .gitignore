@@ -1,0 +1,3 @@
+nasa-venv
+.env
+db.sqlite3
