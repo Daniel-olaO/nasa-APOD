@@ -1,17 +1,4 @@
 {
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.linting.ignorePatterns": [
-        "**/site-packages/**/*.py",
-        ".vscode/*.py",
-        "api/__pychache__/*",
-        "api/migrations/*",
-        "api/__init__.py",
-        "api/admin.py",
-        "api/app.py",
-        "api/test.py",
-        "nasa-venv/*",
-        "nasaAPOD/*",
-        "manage.py"
-    ]
 }

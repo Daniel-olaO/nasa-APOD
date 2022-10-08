@@ -618,5 +618,16 @@ init-import=no
 redefining-builtins-modules=six.moves,past.builtins,future.builtins,builtins,io
 
 [MASTER]
+ignore=
+      __pycache__,
+      migrations,
+      __init__.py,
+      tests.py,
+      admin.py,
+      apps.py,
+      nasa-venv,
+      nasaAPOD,
+      manage.py,
+      setup.cfg,
 disable=C0114,C0115,C0116,W0707,W0613,R0903
 ignored-modules=rest_framework
