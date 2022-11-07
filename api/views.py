@@ -3,6 +3,7 @@ import datetime
 import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from .serializers import UserSerializer
 from .models import User
@@ -75,3 +76,26 @@ class LogoutView(APIView):
             'message': 'success'
         }
         return response
+class SubscriptionView(APIView):
+    def post(self, request, id):
+        user = User.objects.filter(id=id).first()
+        user.isSubscribed = not user.isSubscribed
+        user.save()
+        if user.isSubscribed:
+            return Response({'name':user.email,
+                            'isSubscribed':user.isSubscribed,
+                            'message': 'You are now subscribed to NASA APOD Texting Service'
+                            })
+        else:
+            return Response({'name':user.email,
+                            'isSubscribed':user.isSubscribed,
+                            'message': 'You are now unsubscribed from NASA APOD Texting Service'
+                            })
+
+def getNumbers():
+    numbers = []
+    for user in User.objects.all():
+        if user.isSubscribed:
+            numbers.append(user.phone)
+    return numbers
+
