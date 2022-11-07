@@ -1,10 +1,14 @@
 import os
+import requests
+import json
 import datetime
 import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 from .serializers import UserSerializer
 from .models import User
 
@@ -15,6 +19,7 @@ class RegisterView(APIView):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        sendWelcomeMessage(serializer.data['phone'], serializer.data['name'])
         return Response(serializer.data)
 
 
@@ -99,3 +104,52 @@ def getNumbers():
             numbers.append(user.phone)
     return numbers
 
+def nasaAPOD():
+    url="https://api.nasa.gov/planetary/apod"
+    params = {'api_key':os.environ.get('NASA_API_KEY')}
+
+    try:
+        res = requests.get(url, params=params)
+        if res.ok:
+            response = json.loads(res.text)
+            return response
+    except requests.exceptions.RequestException as e:
+        print(e)
+        return None
+
+def sendText(numbers):
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    data = nasaAPOD()
+    client = Client(account_sid, auth_token)
+    for number in numbers:
+        try:
+            message = client.messages.create(
+                to=number,
+                from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
+                media_url=data['hdurl']
+            )
+            print(message.sid)
+        except TwilioRestException as e:
+            print(e)
+
+@api_view(['GET'])
+def sendAPOD(request):
+    numbers = getNumbers()
+    sendText(numbers)
+    return Response({'message':'success'})
+
+def sendWelcomeMessage(name, number):
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    client = Client(account_sid, auth_token)
+    try:
+        message = client.messages.create(
+            to=number,
+            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+            body= f'Welcome to NASA APOD Texting Service, {name}! You will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
+        )
+        print(message.sid)
+    except TwilioRestException as e:
+        print(e)
