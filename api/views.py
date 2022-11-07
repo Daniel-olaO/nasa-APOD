@@ -77,7 +77,6 @@ class LogoutView(APIView):
         }
         return response
 class SubscriptionView(APIView):
-    #toggle isSubscription
     def post(self, request, id):
         user = User.objects.filter(id=id).first()
         user.isSubscribed = not user.isSubscribed
@@ -92,3 +91,11 @@ class SubscriptionView(APIView):
                             'isSubscribed':user.isSubscribed,
                             'message': 'You are now unsubscribed from NASA APOD Texting Service'
                             })
+
+def getNumbers():
+    numbers = []
+    for user in User.objects.all():
+        if user.isSubscribed:
+            numbers.append(user.phone)
+    return numbers
+
