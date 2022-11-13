@@ -94,7 +94,7 @@ class LogoutView(APIView):
         }
         return response
 class SubscriptionView(APIView):
-    def post(self, request, id):
+    def put(self, request, id):
         user = User.objects.filter(id=id).first()
         user.isSubscribed = not user.isSubscribed
         user.save()
