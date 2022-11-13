@@ -136,13 +136,21 @@ def sendText(numbers):
     client = Client(account_sid, auth_token)
     for number in numbers:
         try:
-            message = client.messages.create(
+            if data['hdurl']:
+                message = client.messages.create(
+                    to=number,
+                    from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+                    body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
+                    media_url=data['hdurl']
+                )
+                print(message.sid)
+            else:
+                message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                media_url=data['hdurl']
-            )
-            print(message.sid)
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
+                )
+                print(message.sid)
         except TwilioRestException as e:
             print(e)
 
