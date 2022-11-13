@@ -14,6 +14,18 @@ from .models import User
 
 
 # Create your views here.
+class RouteListView(APIView):
+    def get(self, request):
+        urlist = [
+            'GET: /api',
+            'POST: /api/register',
+            'POST: /api/login',
+            'GET: /api/users',
+            'POST: /api/toggle-subscription/<int:id>/',
+            'POST: /api/logout',
+        ]
+        return Response(urlist, status=200)
+
 class RegisterView(APIView):
     def post(self, request):
         serializer = UserSerializer(data=request.data)
