@@ -21,7 +21,7 @@ class RouteListView(APIView):
             'POST: /api/register',
             'POST: /api/login',
             'GET: /api/users',
-            'POST: /api/toggle-subscription/<int:id>/',
+            'PUT: /api/toggle-subscription/<int:id>/',
             'POST: /api/logout',
         ]
         return Response(urlist, status=200)
@@ -94,17 +94,19 @@ class LogoutView(APIView):
         }
         return response
 class SubscriptionView(APIView):
-    def put(self, request, id):
+    def post(self, request, id):
         user = User.objects.filter(id=id).first()
         user.isSubscribed = not user.isSubscribed
         user.save()
         if user.isSubscribed:
-            return Response({'name':user.email,
+            return Response({'id':user.id,
+                            'name':user.email,
                             'isSubscribed':user.isSubscribed,
                             'message': 'You are now subscribed to NASA APOD Texting Service'
                             })
         else:
-            return Response({'name':user.email,
+            return Response({'id':user.id,
+                            'name':user.email,
                             'isSubscribed':user.isSubscribed,
                             'message': 'You are now unsubscribed from NASA APOD Texting Service'
                             })
