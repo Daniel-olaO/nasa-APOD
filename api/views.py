@@ -100,13 +100,13 @@ class SubscriptionView(APIView):
         user.save()
         if user.isSubscribed:
             return Response({'id':user.id,
-                            'name':user.email,
+                            'name':user.name,
                             'isSubscribed':user.isSubscribed,
                             'message': 'You are now subscribed to NASA APOD Texting Service'
                             })
         else:
             return Response({'id':user.id,
-                            'name':user.email,
+                            'name':user.name,
                             'isSubscribed':user.isSubscribed,
                             'message': 'You are now unsubscribed from NASA APOD Texting Service'
                             })
