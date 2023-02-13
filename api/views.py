@@ -31,7 +31,7 @@ class RegisterView(APIView):
         serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        sendWelcomeMessage(serializer.data['phone'], serializer.data['name'])
+        sendWelcomeMessage(serializer.data['name'], serializer.data['phone'])
         return Response(serializer.data)
 
 
@@ -163,6 +163,7 @@ def sendAPOD(request):
     return Response({'message':'success'})
 
 def sendWelcomeMessage(name, number):
+    print(number)
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     client = Client(account_sid, auth_token)
@@ -170,7 +171,7 @@ def sendWelcomeMessage(name, number):
         message = client.messages.create(
             to=number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'Welcome to NASA APOD Texting Service, {name}! You will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
+            body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
         print(message.sid)
     except TwilioRestException as e:
