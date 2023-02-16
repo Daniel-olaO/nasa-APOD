@@ -8,6 +8,7 @@ This is a Django API that sends the NASA Astronomy Picture of the Day to a user'
 - [requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Demo](#demo)
 - [LINK](#link)
 - [Tools](#tools)
 - [Author](#author)
@@ -28,9 +29,18 @@ Nasa-APOD Texting Service requires the following to run:
 
 ## Virtual Environment
 
+Linux:
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate
+```
+
+Windows:
+
+```bash
+python -m venv venv
+venv\Scripts\activate
 ```
 
 ## Install Dependencies
@@ -105,6 +115,10 @@ python manage.py runserver
 ```
 
 users must sign up with a name, a phone number, an email address and a password. The phone number must have the country code of the country in which the phone number originated: Canada -> +16574832074. The email address must be valid. The user will receive a welcome text message. The user will also receive a text message every day with the NASA Astronomy Picture of the Day.
+
+# Demo
+
+https://nasa-client.vercel.app/
 
 # LINK
 
