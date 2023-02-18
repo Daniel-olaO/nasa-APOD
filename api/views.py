@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import time
+import schedule
 import datetime
 import jwt
 from rest_framework.views import APIView
@@ -156,8 +158,9 @@ def sendText(numbers):
         except TwilioRestException as e:
             print(e)
 
-@api_view(['GET'])
-def sendAPOD(request):
+#main function
+def sendAPOD():
+    print("sendAPOD")
     numbers = getNumbers()
     sendText(numbers)
     return Response({'message':'success'})
@@ -176,3 +179,13 @@ def sendWelcomeMessage(name, number):
         print(message.sid)
     except TwilioRestException as e:
         print(e)
+
+
+    
+
+#schedule the main function to run periodically
+schedule.every(1).days.do(sendAPOD)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)

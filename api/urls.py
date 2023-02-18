@@ -8,5 +8,4 @@ urlpatterns = [
     path('user', UserView.as_view()),
     path('logout', LogoutView.as_view()),
     path('toggle-subscription/<int:id>/', SubscriptionView.as_view()),
-    path('send-apod', sendAPOD),
 ]
