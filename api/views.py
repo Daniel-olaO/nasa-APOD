@@ -7,7 +7,6 @@ import datetime
 import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
