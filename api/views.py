@@ -159,10 +159,9 @@ def sendText(numbers):
 
 #main function
 def sendAPOD():
-    print("sendAPOD")
     numbers = getNumbers()
     sendText(numbers)
-    return Response({'message':'success'})
+    print('Messages were sent successfully!')
 
 def sendWelcomeMessage(name, number):
     print(number)
