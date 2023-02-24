@@ -1,11 +1,12 @@
 import os
 import requests
 import json
+import time
+import schedule
 import datetime
 import jwt
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
 from rest_framework.exceptions import AuthenticationFailed
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
@@ -156,11 +157,11 @@ def sendText(numbers):
         except TwilioRestException as e:
             print(e)
 
-@api_view(['GET'])
-def sendAPOD(request):
+#main function
+def sendAPOD():
     numbers = getNumbers()
     sendText(numbers)
-    return Response({'message':'success'})
+    print('Messages were sent successfully!')
 
 def sendWelcomeMessage(name, number):
     print(number)
@@ -176,3 +177,13 @@ def sendWelcomeMessage(name, number):
         print(message.sid)
     except TwilioRestException as e:
         print(e)
+
+
+    
+
+#schedule the main function to run periodically
+schedule.every(1).days.do(sendAPOD)
+
+while True:
+    schedule.run_pending()
+    time.sleep(1)
