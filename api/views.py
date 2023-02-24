@@ -90,7 +90,7 @@ class LogoutView(APIView):
         response = Response()
         response.delete_cookie('jwt')
         response.data = {
-            'message': 'success'
+            'message': 'succss'
         }
         return response
 class SubscriptionView(APIView):
