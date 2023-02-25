@@ -1,1 +1,1 @@
-web: gunicorn nasaAPOD.wsgi
+web: gunicorn nasaAPOD.wsgi --timeout 15 --keep-alive 5 --log-level debug
