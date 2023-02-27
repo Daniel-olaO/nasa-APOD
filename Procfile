@@ -1,2 +1,1 @@
-web: gunicorn nasaAPOD.wsgi
-worker:  bundle exec rake jobs:work
+web: gunicorn nasaAPOD.wsgi --timeout 300
