@@ -1,1 +1,1 @@
-web: gunicorn nasaAPOD.wsgi --timeout 300
+web: gunicorn nasaAPOD.wsgi
