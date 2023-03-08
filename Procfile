@@ -1,1 +1,1 @@
-web: python3 manage.py migrate && gunicorn nasaAPOD.wsgi
+web: python manage.py migrate api && gunicorn nasaAPOD.wsgi
