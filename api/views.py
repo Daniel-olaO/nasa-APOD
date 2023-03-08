@@ -1,11 +1,9 @@
 import os
 import requests
 import json
-import time
-import schedule
 import datetime
 import jwt
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from twilio.rest import Client
@@ -15,102 +13,109 @@ from .models import User
 
 
 # Create your views here.
-class RouteListView(APIView):
-    def get(self, request):
-        urlist = [
-            'GET: /api',
-            'POST: /api/register',
-            'POST: /api/login',
-            'GET: /api/users',
-            'PUT: /api/toggle-subscription/<int:id>/',
-            'POST: /api/logout',
-        ]
-        return Response(urlist, status=200)
+@api_view(['GET'])
+def index(request):
+    urlist = [
+        'GET: /api',
+        'POST: /api/register',
+        'POST: /api/login',
+        'GET: /api/users',
+        'PUT: /api/toggle-subscription/<int:id>/',
+        'POST: /api/logout',
+    ]
+    return Response(urlist, status=200)
 
-class RegisterView(APIView):
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        sendWelcomeMessage(serializer.data['name'], serializer.data['phone'])
-        return Response(serializer.data)
-
-
-class LoginView(APIView):
-    def post(self, request):
-        email = request.data['email']
-        password = request.data['password']
-
-        user = User.objects.filter(email=email).first()
-
-        if user is None:
-            raise AuthenticationFailed('User not found!')
-
-        if not user.check_password(password):
-            raise AuthenticationFailed('Incorrect password!')
-
-        payload = {
-            'id': user.id,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
-            'iat': datetime.datetime.utcnow()
-        }
-
-        token = jwt.encode(payload, os.environ.get(
-            'JWT_SECRET'), algorithm='HS256')
-
-        response = Response()
-
-        response.set_cookie(key='jwt', value=token, httponly=True)
-        response.data = {
-            'user': UserSerializer(user).data,
-            'jwt': token,
-        }
-        return response
+@api_view(['POST'])
+def registerUser(request):
+    serializer = UserSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    sendWelcomeMessage(serializer.data['name'], serializer.data['phone'])
+    return Response(serializer.data)
 
 
-class UserView(APIView):
+@api_view(['POST'])
+def checkUser(request):
+    email = request.data['email']
+    password = request.data['password']
 
-    def get(self, request):
-        token = request.COOKIES.get('jwt')
+    user = User.objects.filter(email=email).first()
 
-        if not token:
-            raise AuthenticationFailed('Unauthenticated!')
+    if user is None:
+        raise AuthenticationFailed('User not found!')
 
-        try:
-            payload = jwt.decode(token, 'secret', algorithm=['HS256'])
-        except jwt.ExpiredSignatureError:
-            raise AuthenticationFailed('Unauthenticated!')
+    if not user.check_password(password):
+        raise AuthenticationFailed('Incorrect password!')
 
-        user = User.objects.filter(id=payload['id']).first()
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+    payload = {
+        'id': user.id,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=60),
+        'iat': datetime.datetime.utcnow()
+    }
+
+    token = jwt.encode(payload, os.environ.get(
+        'JWT_SECRET'), algorithm='HS256')
+
+    response = Response()
+
+    response.set_cookie(key='jwt', value=token, httponly=True)
+    response.data = {
+        'user': UserSerializer(user).data,
+        'jwt': token,
+    }
+    return response
 
 
-class LogoutView(APIView):
-    def post(self, request):
-        response = Response()
-        response.delete_cookie('jwt')
-        response.data = {
-            'message': 'success'
-        }
-        return response
-class SubscriptionView(APIView):
-    def post(self, request, id):
-        user = User.objects.filter(id=id).first()
-        user.isSubscribed = not user.isSubscribed
-        user.save()
-        if user.isSubscribed:
-            return Response({'id':user.id,
-                            'name':user.name,
-                            'isSubscribed':user.isSubscribed,
-                            'message': 'You are now subscribed to NASA APOD Texting Service'
-                            })
-        else:
-            return Response({'id':user.id,
-                            'name':user.name,
-                            'isSubscribed':user.isSubscribed,
-                            'message': 'You are now unsubscribed from NASA APOD Texting Service'
-                            })
+@api_view(['GET'])
+def getUsers(request):
+    token = request.COOKIES.get('jwt')
+
+    if not token:
+        raise AuthenticationFailed('Unauthenticated!')
+
+    try:
+        payload = jwt.decode(token, 'secret', algorithm=['HS256'])
+    except jwt.ExpiredSignatureError:
+        raise AuthenticationFailed('Unauthenticated!')
+
+    user = User.objects.filter(id=payload['id']).first()
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(['POST'])
+def logOut(request):
+    response = Response()
+    response.delete_cookie('jwt')
+    response.data = {
+        'message': 'success'
+    }
+    return response
+
+@api_view(['PUT', 'PATCH'])
+def toggleSubscriptions(request, id):
+    user = User.objects.filter(id=id).first()
+    user.isSubscribed = not user.isSubscribed
+    user.save()
+    if user.isSubscribed:
+        return Response({'id':user.id,
+                        'name':user.name,
+                        'isSubscribed':user.isSubscribed,
+                        'message': 'You are now subscribed to NASA APOD Texting Service'
+                        })
+    else:
+        return Response({'id':user.id,
+                        'name':user.name,
+                        'isSubscribed':user.isSubscribed,
+                        'message': 'You are now unsubscribed from NASA APOD Texting Service'
+                        })
+
+#main function
+def sendAPOD(request):
+    numbers = getNumbers()
+    sendText(numbers)
+    return Response({"message": "Messages were sent successfully!"})
+
 
 def getNumbers():
     numbers = []
@@ -157,12 +162,6 @@ def sendText(numbers):
         except TwilioRestException as e:
             print(e)
 
-#main function
-def sendAPOD():
-    numbers = getNumbers()
-    sendText(numbers)
-    print('Messages were sent successfully!')
-
 def sendWelcomeMessage(name, number):
     print(number)
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -177,13 +176,3 @@ def sendWelcomeMessage(name, number):
         print(message.sid)
     except TwilioRestException as e:
         print(e)
-
-
-    
-
-#schedule the main function to run periodically
-schedule.every(1).days.do(sendAPOD)
-
-while True:
-    schedule.run_pending()
-    time.sleep(1)
