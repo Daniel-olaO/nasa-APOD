@@ -3,6 +3,8 @@ import requests
 import json
 import datetime
 import jwt
+import schedule
+import time
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -111,10 +113,10 @@ def toggleSubscriptions(request, id):
                         })
 
 #main function
-def sendAPOD(request):
+def sendAPOD():
     numbers = getNumbers()
     sendText(numbers)
-    return Response({"message": "Messages were sent successfully!"})
+    print('message sent')
 
 
 def getNumbers():
@@ -133,9 +135,8 @@ def nasaAPOD():
         if res.ok:
             response = json.loads(res.text)
             return response
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return None
+    except requests.exceptions.RequestException as requestException:
+        return requestException
 
 def sendText(numbers):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -151,16 +152,16 @@ def sendText(numbers):
                     body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
                     media_url=data['hdurl']
                 )
-                print(message.sid)
+                return message.sid
             else:
                 message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
                 )
-                print(message.sid)
-        except TwilioRestException as e:
-            print(e)
+                return message.sid
+        except TwilioRestException as twilioRestException:
+            return twilioRestException
 
 def sendWelcomeMessage(name, number):
     print(number)
@@ -173,6 +174,7 @@ def sendWelcomeMessage(name, number):
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
-        print(message.sid)
-    except TwilioRestException as e:
-        print(e)
+        return message.sid
+    except TwilioRestException as twilioRestException:
+        return twilioRestException
+
