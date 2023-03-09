@@ -116,7 +116,6 @@ def toggleSubscriptions(request, id):
 def sendAPOD():
     numbers = getNumbers()
     sendText(numbers)
-    print('message sent')
 
 
 def getNumbers():
@@ -152,16 +151,15 @@ def sendText(numbers):
                     body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
                     media_url=data['hdurl']
                 )
-                return message.sid
             else:
                 message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
                 )
-                return message.sid
+            print("Message sent!")
         except TwilioRestException as twilioRestException:
-            return twilioRestException
+            print("TwilioRestException: ", twilioRestException)
 
 def sendWelcomeMessage(name, number):
     print(number)
@@ -174,7 +172,7 @@ def sendWelcomeMessage(name, number):
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
-        return message.sid
+        print(message.sid)
     except TwilioRestException as twilioRestException:
-        return twilioRestException
+        print("TwilioRestException: ", twilioRestException)
 
