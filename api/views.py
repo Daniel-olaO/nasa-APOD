@@ -114,9 +114,12 @@ def toggleSubscriptions(request, id):
 
 #main function
 def sendAPOD():
+    print("sending message........", datetime.datetime.now())
     numbers = getNumbers()
-    sendText(numbers)
-    print('Messages were sent successfully')
+    if sendText(numbers):
+        print("message sent successfully")
+    else:
+        print("messages failed to send")
 
 
 def getNumbers():
@@ -135,6 +138,7 @@ def nasaAPOD():
         if res.ok:
             response = json.loads(res.text)
             print("Retrieved data from NASA API")
+            return response
     except requests.exceptions.RequestException as requestException:
         print("RequestException: ", requestException)
 
@@ -160,8 +164,11 @@ def sendText(numbers):
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
                 )
                 print(message.sid)
+
+            return True
         except TwilioRestException as twilioRestException:
             print("TwilioRestException: ", twilioRestException)
+            return False
 
 def sendWelcomeMessage(name, number):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
