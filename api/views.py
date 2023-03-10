@@ -116,7 +116,7 @@ def toggleSubscriptions(request, id):
 def sendAPOD():
     numbers = getNumbers()
     sendText(numbers)
-    # could add a loggers here to log the success or failure of the sendText function
+    print('Messages were sent successfully')
 
 
 def getNumbers():
@@ -134,9 +134,9 @@ def nasaAPOD():
         res = requests.get(url, params=params)
         if res.ok:
             response = json.loads(res.text)
-            return response#could add a logger here
+            print("Retrieved data from NASA API")
     except requests.exceptions.RequestException as requestException:
-        return requestException #could add a logger here
+        print("RequestException: ", requestException)
 
 def sendText(numbers):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -152,15 +152,16 @@ def sendText(numbers):
                     body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
                     media_url=data['hdurl']
                 )
+                print(message.sid)
             else:
                 message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
                 )
-            print("Message sent!")#could add a logger here
+                print(message.sid)
         except TwilioRestException as twilioRestException:
-            print("TwilioRestException: ", twilioRestException)#could add a logger here
+            print("TwilioRestException: ", twilioRestException)
 
 def sendWelcomeMessage(name, number):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -172,7 +173,7 @@ def sendWelcomeMessage(name, number):
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
-        print(message.sid)#could add a logger here
+        print(message.sid)
     except TwilioRestException as twilioRestException:
-        print("TwilioRestException: ", twilioRestException)#could add a logger here
+        print("TwilioRestException: ", twilioRestException)
 
