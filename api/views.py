@@ -116,6 +116,7 @@ def toggleSubscriptions(request, id):
 def sendAPOD():
     numbers = getNumbers()
     sendText(numbers)
+    # could add a loggers here to log the success or failure of the sendText function
 
 
 def getNumbers():
@@ -133,9 +134,9 @@ def nasaAPOD():
         res = requests.get(url, params=params)
         if res.ok:
             response = json.loads(res.text)
-            return response
+            return response#could add a logger here
     except requests.exceptions.RequestException as requestException:
-        return requestException
+        return requestException #could add a logger here
 
 def sendText(numbers):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
@@ -157,12 +158,11 @@ def sendText(numbers):
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
                 )
-            print("Message sent!")
+            print("Message sent!")#could add a logger here
         except TwilioRestException as twilioRestException:
-            print("TwilioRestException: ", twilioRestException)
+            print("TwilioRestException: ", twilioRestException)#could add a logger here
 
 def sendWelcomeMessage(name, number):
-    print(number)
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     client = Client(account_sid, auth_token)
@@ -172,7 +172,7 @@ def sendWelcomeMessage(name, number):
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
-        print(message.sid)
+        print(message.sid)#could add a logger here
     except TwilioRestException as twilioRestException:
-        print("TwilioRestException: ", twilioRestException)
+        print("TwilioRestException: ", twilioRestException)#could add a logger here
 

@@ -4,5 +4,6 @@ from ..views import sendAPOD
 
 def start():
     scheduler = BackgroundScheduler()
-    scheduler.add_job(sendAPOD, 'interval', hours=24)
+    # schedule the sendAPOD function to run every day at 12:05:00
+    scheduler.add_job(sendAPOD, 'cron', hour=12,minute=5,second=0) #could add a logger here
     scheduler.start()
