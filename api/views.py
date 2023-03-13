@@ -3,6 +3,8 @@ import requests
 import json
 import datetime
 import jwt
+import schedule
+import time
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
@@ -111,10 +113,20 @@ def toggleSubscriptions(request, id):
                         })
 
 #main function
-def sendAPOD(request):
+def sendAPOD():
+    print("sending message........", datetime.datetime.now())
     numbers = getNumbers()
-    sendText(numbers)
-    return Response({"message": "Messages were sent successfully!"})
+    
+    for number in numbers:
+        did_send = sendText(number)
+        if did_send:
+            print("sent to ", number)
+        else:
+            print("failed to send to ", number)
+    
+    print("done sending messages", datetime.datetime.now())
+
+    
 
 
 def getNumbers():
@@ -132,38 +144,39 @@ def nasaAPOD():
         res = requests.get(url, params=params)
         if res.ok:
             response = json.loads(res.text)
+            print("Retrieved data from NASA API")
             return response
-    except requests.exceptions.RequestException as e:
-        print(e)
-        return None
+    except requests.exceptions.RequestException as requestException:
+        print("RequestException: ", requestException)
 
-def sendText(numbers):
+def sendText(number):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     data = nasaAPOD()
     client = Client(account_sid, auth_token)
-    for number in numbers:
-        try:
-            if data['hdurl']:
-                message = client.messages.create(
-                    to=number,
-                    from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                    body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                    media_url=data['hdurl']
-                )
-                print(message.sid)
-            else:
-                message = client.messages.create(
+    try:
+        if data['hdurl']:
+            message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
-                )
-                print(message.sid)
-        except TwilioRestException as e:
-            print(e)
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
+                media_url=data['hdurl']
+            )
+            print(message.sid)
+        else:
+            message = client.messages.create(
+            to=number,
+            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
+            )
+            print(message.sid)
+
+        return True
+    except TwilioRestException as twilioRestException:
+        print("TwilioRestException: ", twilioRestException)
+        return False
 
 def sendWelcomeMessage(name, number):
-    print(number)
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     client = Client(account_sid, auth_token)
@@ -174,5 +187,6 @@ def sendWelcomeMessage(name, number):
             body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
         print(message.sid)
-    except TwilioRestException as e:
-        print(e)
+    except TwilioRestException as twilioRestException:
+        print("TwilioRestException: ", twilioRestException)
+

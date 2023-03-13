@@ -1,3 +1,4 @@
+APScheduler==3.10.1
 asgiref==3.5.2
 astroid==2.13.2
 certifi==2021.10.8
@@ -6,6 +7,7 @@ colorama==0.4.6
 dill==0.3.6
 distlib==0.3.4
 Django==4.1.2
+django-apscheduler==0.6.2
 django-cors-headers==3.14.0
 django-dotenv==1.4.2
 djangorestframework==3.14.0
@@ -21,13 +23,16 @@ psycopg2-pool==1.1
 PyJWT==2.5.0
 pylint==2.15.10
 pytz==2022.2.1
+pytz-deprecation-shim==0.1.0.post0
 requests==2.28.1
+schedule==1.1.0
 six==1.16.0
 sqlparse==0.4.2
 tomlkit==0.11.6
 twilio==7.16.4
 typing_extensions==4.4.0
 tzdata==2022.2
+tzlocal==4.2
 urllib3==1.26.12
 virtualenv==20.13.0
 virtualenv-clone==0.5.7
