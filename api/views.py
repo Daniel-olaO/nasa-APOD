@@ -116,10 +116,17 @@ def toggleSubscriptions(request, id):
 def sendAPOD():
     print("sending message........", datetime.datetime.now())
     numbers = getNumbers()
-    if sendText(numbers):
-        print("message sent successfully")
-    else:
-        print("messages failed to send")
+    
+    for number in numbers:
+        did_send = sendText(number)
+        if did_send:
+            print("sent to ", number)
+        else:
+            print("failed to send to ", number)
+    
+    print("done sending messages", datetime.datetime.now())
+
+    
 
 
 def getNumbers():
@@ -142,33 +149,32 @@ def nasaAPOD():
     except requests.exceptions.RequestException as requestException:
         print("RequestException: ", requestException)
 
-def sendText(numbers):
+def sendText(number):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     data = nasaAPOD()
     client = Client(account_sid, auth_token)
-    for number in numbers:
-        try:
-            if data['hdurl']:
-                message = client.messages.create(
-                    to=number,
-                    from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                    body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                    media_url=data['hdurl']
-                )
-                print(message.sid)
-            else:
-                message = client.messages.create(
+    try:
+        if data['hdurl']:
+            message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
-                )
-                print(message.sid)
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
+                media_url=data['hdurl']
+            )
+            print(message.sid)
+        else:
+            message = client.messages.create(
+            to=number,
+            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
+            )
+            print(message.sid)
 
-            return True
-        except TwilioRestException as twilioRestException:
-            print("TwilioRestException: ", twilioRestException)
-            return False
+        return True
+    except TwilioRestException as twilioRestException:
+        print("TwilioRestException: ", twilioRestException)
+        return False
 
 def sendWelcomeMessage(name, number):
     account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
