@@ -22,8 +22,8 @@ I created this app to share my love of space and astronomy with others. I also w
 
 Nasa-APOD Texting Service requires the following to run:
 
-- Nasa API key
-- Twilo Account
+- [Nasa API key](https://api.nasa.gov/)
+- [Twilo Account](https://www.twilio.com/)
 
 # Installation
 
@@ -89,11 +89,15 @@ TWILIO_PHONE_NUMBER=your_twilio_phone_number
 
 ### Secret Key
 
+generate a secret key for Django randomly
+
 ```bash
 SECRET_KEY=your_secret_key
 ```
 
 ### JWT
+
+generate a secret key for JWT randomly
 
 ```bash
 JWT_SECRET_KEY=your_jwt_secret_key
