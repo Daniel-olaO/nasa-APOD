@@ -126,8 +126,8 @@ https://nasa-client.vercel.app/
 
 # LINK
 
-This app is deployed on AWS EC2 and can be accessed at:
-http://3.85.54.30:8000/api/
+This app is deployed on [railway](https://railway.app/) and can be accessed at:
+https://nasa-apod-production.up.railway.app/api
 
 # Tools
 
