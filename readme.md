@@ -122,7 +122,7 @@ users must sign up with a name, a phone number, an email address and a password.
 
 # Demo
 
-https://nasa-client.vercel.app/
+https://nasa-client-production.up.railway.app/
 
 # LINK
 
