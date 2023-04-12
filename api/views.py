@@ -160,7 +160,7 @@ def sendText(number):
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                media_url=data['hdurl'] if 'hdurl' in data else data['url']
+                media_url=data['url']
             )
             print(message.sid)
         elif data['media_type'] == 'video':
@@ -195,4 +195,3 @@ def sendWelcomeMessage(name, number):
         print(message.sid)
     except TwilioRestException as twilioRestException:
         print("TwilioRestException: ", twilioRestException)
-
