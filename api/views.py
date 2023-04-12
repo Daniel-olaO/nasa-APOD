@@ -155,12 +155,19 @@ def sendText(number):
     data = nasaAPOD()
     client = Client(account_sid, auth_token)
     try:
-        if data['hdurl']:
+        if data['media_type'] == 'image':
             message = client.messages.create(
                 to=number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                media_url=data['hdurl']
+                media_url=data['hdurl'] if 'hdurl' in data else data['url']
+            )
+            print(message.sid)
+        elif data['media_type'] == 'video':
+            message = client.messages.create(
+            to=number,
+            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]} \n\n Video URL: {data["url"]}'
             )
             print(message.sid)
         else:
@@ -170,7 +177,6 @@ def sendText(number):
             body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
             )
             print(message.sid)
-
         return True
     except TwilioRestException as twilioRestException:
         print("TwilioRestException: ", twilioRestException)
