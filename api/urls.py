@@ -3,9 +3,11 @@ from .views import index, registerUser, checkUser, getUsers, logOut, toggleSubsc
 
 urlpatterns = [
     path('', index),
-    path('register', registerUser),
-    path('login', checkUser),
-    path('user', getUsers),
-    path('logout', logOut),
-    path('toggle-subscription/<int:id>/', toggleSubscriptions),
+    path('register', registerUser, name='register'),
+    path('login', checkUser, name='login'),
+    path('user', getUsers, name='user'),
+    path('logout', logOut, name='logout'),
+    path('toggle-subscription/<int:id>/', toggleSubscriptions,
+         name='toggle-subscription'
+         ),
 ]
