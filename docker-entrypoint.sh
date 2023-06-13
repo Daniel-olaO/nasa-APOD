@@ -1,3 +1,4 @@
+#!/bin/sh
 
 echo "Flush the manage.py command it any"
 
