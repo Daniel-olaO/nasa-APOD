@@ -3,15 +3,14 @@ import requests
 import json
 import datetime
 import jwt
-import schedule
-import time
+import random
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from .serializers import UserSerializer
-from .models import User
+from .models import User, RandomAPODText
 
 
 # Create your views here.
@@ -112,6 +111,7 @@ def toggleSubscriptions(request, id):
                         'message': 'You are now unsubscribed from NASA APOD Texting Service'
                         })
 
+
 #main function
 def sendAPOD():
     print("sending message........", datetime.datetime.now())
@@ -125,9 +125,6 @@ def sendAPOD():
             print("failed to send to ", number)
     
     print("done sending messages", datetime.datetime.now())
-
-    
-
 
 def getNumbers():
     numbers = []
@@ -154,6 +151,11 @@ def sendText(number):
     auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
     data = nasaAPOD()
     client = Client(account_sid, auth_token)
+
+    if data is None:
+        print("Sending back-up notification ..")
+        sendBackUpMessage(number)
+        return True # return true because we still want to send the backup message
     try:
         if data['media_type'] == 'image':
             message = client.messages.create(
@@ -163,18 +165,11 @@ def sendText(number):
                 media_url=data['url']
             )
             print(message.sid)
-        elif data['media_type'] == 'video':
-            message = client.messages.create(
-            to=number,
-            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]} \n\n Video URL: {data["url"]}'
-            )
-            print(message.sid)
         else:
             message = client.messages.create(
             to=number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]} \n\n Video URL: {data["url"]}'
             )
             print(message.sid)
         return True
@@ -195,3 +190,57 @@ def sendWelcomeMessage(name, number):
         print(message.sid)
     except TwilioRestException as twilioRestException:
         print("TwilioRestException: ", twilioRestException)
+
+#store text message in database for future use to be called weekly
+def storeMessageWeekly():
+    data = nasaAPOD()
+    if data is None:
+        return
+    try:
+        random_message = RandomAPODText.objects.create(title=data['title'],
+                                                       media_type=data['media_type'], 
+                                                       link=data['url'], 
+                                                       message=data['explanation']
+                                                       )
+
+        random_message.save()
+        print("Stored message in database")
+    except Exception as exception:
+        print("Exception: ", exception)     
+  
+#get random message from database
+def getRandomMessage():
+    try:
+        count = RandomAPODText.objects.count()
+        random_index = random.randint(0, count - 1)
+        random_message = RandomAPODText.objects.all()[random_index]
+        return random_message
+    except Exception as exception:
+        print("Exception: ", exception)
+
+def sendBackUpMessage(number):
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    client = Client(account_sid, auth_token)
+    data = getRandomMessage()
+
+    try:
+        if data['media_type'] == 'image':
+            message = client.messages.create(
+                to=number,
+                from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
+                media_url=data['url']
+            )
+            print(message.sid)
+        else:
+            message = client.messages.create(
+            to=number,
+            from_=os.environ.get('TWILIO_PHONE_NUMBER'),
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]} \n\n Video URL: {data["url"]}'
+            )
+            print(message.sid)
+        return True
+    except TwilioRestException as twilioRestException:
+        print("TwilioRestException: ", twilioRestException)
+        return False
