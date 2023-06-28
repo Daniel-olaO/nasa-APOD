@@ -3,16 +3,20 @@ import requests
 import json
 import datetime
 import jwt
-import schedule
-import time
+import random
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import AuthenticationFailed
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 from .serializers import UserSerializer
-from .models import User
+from .models import User, RandomAPODText
 
+
+# Twilo Environment Variables: do not change here
+ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_CLIENT = Client(ACCOUNT_SID, AUTH_TOKEN)
 
 # Create your views here.
 @api_view(['GET'])
@@ -28,16 +32,16 @@ def index(request):
     return Response(urlist, status=200)
 
 @api_view(['POST'])
-def registerUser(request):
+def register_user(request):
     serializer = UserSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    sendWelcomeMessage(serializer.data['name'], serializer.data['phone'])
+    send_welcome_message(serializer.data['name'], serializer.data['phone'])
     return Response(serializer.data)
 
 
 @api_view(['POST'])
-def checkUser(request):
+def check_user(request):
     email = request.data['email']
     password = request.data['password']
 
@@ -69,7 +73,7 @@ def checkUser(request):
 
 
 @api_view(['GET'])
-def getUsers(request):
+def get_users(request):
     token = request.COOKIES.get('jwt')
 
     if not token:
@@ -95,7 +99,7 @@ def logOut(request):
     return response
 
 @api_view(['PUT', 'PATCH'])
-def toggleSubscriptions(request, id):
+def toggle_subscriptions(request, id):
     user = User.objects.filter(id=id).first()
     user.isSubscribed = not user.isSubscribed
     user.save()
@@ -112,31 +116,29 @@ def toggleSubscriptions(request, id):
                         'message': 'You are now unsubscribed from NASA APOD Texting Service'
                         })
 
+
 #main function
-def sendAPOD():
+def send_NASA_APOD():
     print("sending message........", datetime.datetime.now())
-    numbers = getNumbers()
+    phone_numbers = get_phone_numbers()
     
-    for number in numbers:
-        did_send = sendText(number)
+    for phone_number in phone_numbers:
+        did_send = send_text(phone_number)
         if did_send:
-            print("sent to ", number)
+            print("sent to ", phone_number)
         else:
-            print("failed to send to ", number)
+            print("failed to send to ", phone_number)
     
     print("done sending messages", datetime.datetime.now())
 
-    
-
-
-def getNumbers():
-    numbers = []
+def get_phone_numbers():
+    phone_numbers = []
     for user in User.objects.all():
         if user.isSubscribed:
-            numbers.append(user.phone)
-    return numbers
+            phone_numbers.append(user.phone)
+    return phone_numbers
 
-def nasaAPOD():
+def get_nasaAPOD():
     url="https://api.nasa.gov/planetary/apod"
     params = {'api_key':os.environ.get('NASA_API_KEY')}
 
@@ -149,49 +151,83 @@ def nasaAPOD():
     except requests.exceptions.RequestException as requestException:
         print("RequestException: ", requestException)
 
-def sendText(number):
-    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-    data = nasaAPOD()
-    client = Client(account_sid, auth_token)
+def send_apod_text(apod_data: dict, phone_number: str):
     try:
-        if data['media_type'] == 'image':
-            message = client.messages.create(
-                to=number,
+        if apod_data['media_type'] == 'image':
+            message = TWILIO_CLIENT.messages.create(
+                to=phone_number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}',
-                media_url=data['url']
+                body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]}',
+                media_url=apod_data['url']
             )
             print(message.sid)
-        elif data['media_type'] == 'video':
-            message = client.messages.create(
-            to=number,
+        elif apod_data['media_type'] == 'video':
+            message = TWILIO_CLIENT.messages.create(
+            to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]} \n\n Video URL: {data["url"]}'
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]} \n\n Video URL: {apod_data["url"]}'
             )
             print(message.sid)
         else:
-            message = client.messages.create(
-            to=number,
+            message = TWILIO_CLIENT.messages.create(
+            to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {data["title"]}.\n\n{data["explanation"]}'
+            body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]}'
             )
             print(message.sid)
         return True
     except TwilioRestException as twilioRestException:
         print("TwilioRestException: ", twilioRestException)
         return False
+    
+def send_text(phone_number: str):
+    apod_data = get_nasaAPOD()
+    if apod_data is None:
+        print("Sending back-up notification ..")
+        send_backUp_message(phone_number)
+        return True # return true because we still want to send the backup message
+    return send_apod_text(apod_data, phone_number)
 
-def sendWelcomeMessage(name, number):
-    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
+def send_welcome_message(user_name: str, phone_number: str):
     try:
-        message = client.messages.create(
-            to=number,
+        message = TWILIO_CLIENT.messages.create(
+            to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
-            body= f'\nWelcome to NASA APOD Texting Service\nHey {name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
+            body= f'\nWelcome to NASA APOD Texting Service\nHey {user_name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
         )
         print(message.sid)
     except TwilioRestException as twilioRestException:
         print("TwilioRestException: ", twilioRestException)
+
+#store text message in database for future use to be called weekly
+def store_message_weekly():
+    apod_data = get_nasaAPOD()
+    if apod_data is None:
+        return
+    try:
+        random_message = RandomAPODText.objects.create(title=apod_data['title'],
+                                                       media_type=apod_data['media_type'], 
+                                                       link=apod_data['url'], 
+                                                       message=apod_data['explanation']
+                                                       )
+
+        random_message.save()
+        print("Stored message in database")
+    except Exception as exception:
+        print("Exception: ", exception)     
+  
+#get random message from database
+def get_random_message():
+    try:
+        count = RandomAPODText.objects.count()
+        random_index = random.randint(0, count - 1)
+        random_message = RandomAPODText.objects.all()[random_index]
+        return random_message
+    except Exception as exception:
+        print("Exception: ", exception)
+
+def send_backUp_message(phone_number: str):
+    apod_data = get_random_message()
+    if apod_data is None:
+        return
+    return send_apod_text(apod_data, phone_number)
