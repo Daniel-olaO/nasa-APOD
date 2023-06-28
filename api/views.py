@@ -13,6 +13,11 @@ from .serializers import UserSerializer
 from .models import User, RandomAPODText
 
 
+# Twilo Environment Variables: do not change here
+ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
+TWILIO_CLIENT = Client(ACCOUNT_SID, AUTH_TOKEN)
+
 # Create your views here.
 @api_view(['GET'])
 def index(request):
@@ -147,12 +152,9 @@ def get_nasaAPOD():
         print("RequestException: ", requestException)
 
 def send_apod_text(apod_data: dict, phone_number: str):
-    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
     try:
         if apod_data['media_type'] == 'image':
-            message = client.messages.create(
+            message = TWILIO_CLIENT.messages.create(
                 to=phone_number,
                 from_=os.environ.get('TWILIO_PHONE_NUMBER'),
                 body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]}',
@@ -160,14 +162,14 @@ def send_apod_text(apod_data: dict, phone_number: str):
             )
             print(message.sid)
         elif apod_data['media_type'] == 'video':
-            message = client.messages.create(
+            message = TWILIO_CLIENT.messages.create(
             to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]} \n\n Video URL: {apod_data["url"]}'
             )
             print(message.sid)
         else:
-            message = client.messages.create(
+            message = TWILIO_CLIENT.messages.create(
             to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nToday\'s NASA Astronomy Picture of the Day is: {apod_data["title"]}.\n\n{apod_data["explanation"]}'
@@ -187,11 +189,8 @@ def send_text(phone_number: str):
     return send_apod_text(apod_data, phone_number)
 
 def send_welcome_message(user_name: str, phone_number: str):
-    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
-    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
-    client = Client(account_sid, auth_token)
     try:
-        message = client.messages.create(
+        message = TWILIO_CLIENT.messages.create(
             to=phone_number,
             from_=os.environ.get('TWILIO_PHONE_NUMBER'),
             body= f'\nWelcome to NASA APOD Texting Service\nHey {user_name}!\nYou will now receive a text message with today\'s NASA Astronomy Picture of the Day every day.'
