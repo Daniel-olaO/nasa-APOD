@@ -201,7 +201,7 @@ def send_welcome_message(user_name: str, phone_number: str):
 
 #store text message in database for future use to be called weekly
 def store_message_weekly():
-    apod_data = get_nasaAPOD()
+    apod_data = get_nasa_APOD_with_retries()
     if apod_data is None:
         return
     try:
