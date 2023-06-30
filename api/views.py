@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import time
 import datetime
 import jwt
 import random
@@ -181,11 +182,10 @@ def send_apod_text(apod_data: dict, phone_number: str):
         return False
     
 def send_text(phone_number: str):
-    apod_data = get_nasaAPOD()
+    apod_data = get_nasa_APOD_with_retries()
     if apod_data is None:
         print("Sending back-up notification ..")
-        send_backUp_message(phone_number)
-        return True # return true because we still want to send the backup message
+        return send_backUp_message(phone_number)
     return send_apod_text(apod_data, phone_number)
 
 def send_welcome_message(user_name: str, phone_number: str):
@@ -201,7 +201,7 @@ def send_welcome_message(user_name: str, phone_number: str):
 
 #store text message in database for future use to be called weekly
 def store_message_weekly():
-    apod_data = get_nasaAPOD()
+    apod_data = get_nasa_APOD_with_retries()
     if apod_data is None:
         return
     try:
@@ -229,5 +229,14 @@ def get_random_message():
 def send_backUp_message(phone_number: str):
     apod_data = get_random_message()
     if apod_data is None:
-        return
+        return False
     return send_apod_text(apod_data, phone_number)
+
+def get_nasa_APOD_with_retries(max_retries=5):
+    for i in range(max_retries):
+        # exponential backoff
+        time.sleep(2 ** i)
+        data = get_nasaAPOD()
+        if data is not None:
+            return data
+    return None
