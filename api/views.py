@@ -229,7 +229,7 @@ def get_random_message():
 def send_backUp_message(phone_number: str):
     apod_data = get_random_message()
     #convert to dict
-    apod_data = apod_data.__dict__
+    apod_data = vars(apod_data)
     if apod_data is None:
         return False
     return send_apod_text(apod_data, phone_number)
