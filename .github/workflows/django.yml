@@ -1,0 +1,27 @@
+name: Django API Test Workflow
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+      
+    - name: Set DJANGO_SETTINGS_MODULE environment variable
+      run: export DJANGO_SETTINGS_MODULE=nasaAPOD.settings
+
+
+    - name: Run tests
+      run: |
+        python manage.py test --settings=nasaAPOD.settings api
