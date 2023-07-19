@@ -43,8 +43,8 @@ class User(AbstractUser):
 class RandomAPODText(models.Model):
     title = models.CharField(max_length=255, unique=True, null=False)
     media_type = models.CharField(max_length=25, null=True)
-    link = models.CharField(max_length=255, unique=True, null=True)
-    message = models.CharField(max_length=2000, null=False)
+    url = models.CharField(max_length=255, unique=True, null=True)
+    explanation = models.CharField(max_length=2000, null=False)
 
     def __str__(self):
         return self.title

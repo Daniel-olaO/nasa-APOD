@@ -207,8 +207,8 @@ def store_message_weekly():
     try:
         random_message = RandomAPODText.objects.create(title=apod_data['title'],
                                                        media_type=apod_data['media_type'], 
-                                                       link=apod_data['url'], 
-                                                       message=apod_data['explanation']
+                                                       url=apod_data['url'], 
+                                                       explanation=apod_data['explanation']
                                                        )
 
         random_message.save()
@@ -228,6 +228,8 @@ def get_random_message():
 
 def send_backUp_message(phone_number: str):
     apod_data = get_random_message()
+    #convert to dict
+    apod_data = vars(apod_data)
     if apod_data is None:
         return False
     return send_apod_text(apod_data, phone_number)
