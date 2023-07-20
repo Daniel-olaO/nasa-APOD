@@ -227,12 +227,10 @@ def get_random_message():
         print("Exception: ", exception)
 
 def send_backUp_message(phone_number: str):
-    apod_data = get_random_message()
-    #convert to dict
-    apod_data = vars(apod_data)
+    apod_data = get_random_message() # to be converted to <dict>
     if apod_data is None:
         return False
-    return send_apod_text(apod_data, phone_number)
+    return send_apod_text(vars(apod_data), phone_number)
 
 def get_nasa_APOD_with_retries(max_retries=5):
     for i in range(max_retries):
